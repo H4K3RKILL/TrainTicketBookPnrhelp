@@ -1,11 +1,20 @@
-/* global __app_id, __firebase_config, __initial_auth_token */
+/* global __app_id, __firebase_config, __initial_auth_token */ // These are no longer used but kept as a comment for context
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { createClient } from '@supabase/supabase-js'; // Import Supabase client
 
-// Define BookingForm component directly within this file
-function BookingForm({ db, userId, isAuthReady, setMessage }) {
+// --- SUPABASE CONFIGURATION ---
+// IMPORTANT: These are your actual Supabase project URL and Public Anon Key.
+// They have been updated based on your last input.
+const SUPABASE_URL = 'https://gsvwaketebaysumqbwmx.supabase.co'; // Example: 'https://abcdefg.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzdndha2V0ZWJheXN1bXFid214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNTY5NTAsImV4cCI6MjA2NTczMjk1MH0.31aG_BNCcE8vn_nwZ_XXNohsF_CuXXMYNWsTvVNWAAY'; // Example: 'eyJhbGciOiJIUzI1NiI...[your public anon key]'
+// --- END SUPABASE CONFIGURATION ---
+
+// Initialize Supabase client
+// This client will be used to interact with your Supabase database.
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Define BookingForm component
+function BookingForm({ userId, isReady, setMessage }) {
   // Form state variables
   const [fromStation, setFromStation] = useState('');
   const [toStation, setToToStation] = useState('');
@@ -28,8 +37,8 @@ function BookingForm({ db, userId, isAuthReady, setMessage }) {
     e.preventDefault();
     setMessage(''); // Clear previous messages
 
-    if (!isAuthReady || !db || !userId) {
-      setMessage("Firebase not ready. Please wait or refresh.");
+    if (!isReady) {
+      setMessage("Application not ready. Please wait or refresh.");
       return;
     }
 
@@ -39,24 +48,31 @@ function BookingForm({ db, userId, isAuthReady, setMessage }) {
     }
 
     // In a real application, you would upload the paymentScreenshot file
-    // to Firebase Storage here and get its URL. For this example,
+    // to Supabase Storage here and get its URL. For this example,
     // we'll just store its name if selected.
     const screenshotFileName = paymentScreenshot ? paymentScreenshot.name : 'No screenshot attached';
 
     try {
-      // Define the collection path for private user data
-      const bookingsCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/trainBookings`);
+      // Insert data into the 'trainBookings' table in Supabase
+      // Make sure you create a 'trainBookings' table in your Supabase dashboard
+      const { data, error } = await supabase
+        .from('trainBookings') // Replace with your actual table name if different
+        .insert([
+          {
+            fromStation: fromStation,
+            toStation: toStation,
+            mobileNumber: mobileNumber,
+            email: email,
+            whatsAppNumber: whatsAppNumber,
+            paymentScreenshotInfo: screenshotFileName, // Storing filename, in real app would be URL
+            // Supabase automatically adds 'created_at' timestamp
+            user_id: userId, // Store the generated userId
+          },
+        ]);
 
-      await addDoc(bookingsCollectionRef, {
-        fromStation: fromStation,
-        toStation: toStation,
-        mobileNumber: mobileNumber,
-        email: email,
-        whatsAppNumber: whatsAppNumber,
-        paymentScreenshotInfo: screenshotFileName, // Storing filename, in real app would be URL
-        timestamp: serverTimestamp(), // Firestore timestamp
-        userId: userId,
-      });
+      if (error) {
+        throw error;
+      }
 
       setMessage('Your booking request has been submitted successfully! We will process it shortly.');
       // Clear form fields after successful submission
@@ -72,7 +88,7 @@ function BookingForm({ db, userId, isAuthReady, setMessage }) {
       }
 
     } catch (error) {
-      console.error("Error submitting booking:", error);
+      console.error("Error submitting booking:", error.message);
       setMessage(`Failed to submit booking: ${error.message}`);
     }
   };
@@ -205,7 +221,7 @@ function BookingForm({ db, userId, isAuthReady, setMessage }) {
           className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md font-semibold text-lg
             hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
             transition duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-          disabled={!isAuthReady}
+          disabled={!isReady}
         >
           Submit Booking Request
         </button>
@@ -228,8 +244,8 @@ function BookingForm({ db, userId, isAuthReady, setMessage }) {
   );
 }
 
-// Define PNRPredictionForm component directly within this file
-function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
+// Define PNRPredictionForm component
+function PNRPredictionForm({ userId, isReady, setMessage }) {
   const [pnrNumber, setPnrNumber] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [paymentScreenshot, setPaymentScreenshot] = useState(null); // Stores the File object
@@ -248,8 +264,8 @@ function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
     e.preventDefault();
     setMessage(''); // Clear previous messages
 
-    if (!isAuthReady || !db || !userId) {
-      setMessage("Firebase not ready. Please wait or refresh.");
+    if (!isReady) {
+      setMessage("Application not ready. Please wait or refresh.");
       return;
     }
 
@@ -261,16 +277,23 @@ function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
     const screenshotFileName = paymentScreenshot ? paymentScreenshot.name : 'No screenshot attached';
 
     try {
-      // Define the collection path for private user data
-      const pnrPredictionsCollectionRef = collection(db, `artifacts/${__app_id}/users/${userId}/pnrPredictions`);
+      // Insert data into the 'pnrPredictions' table in Supabase
+      // Make sure you create a 'pnrPredictions' table in your Supabase dashboard
+      const { data, error } = await supabase
+        .from('pnrPredictions') // Replace with your actual table name if different
+        .insert([
+          {
+            pnrNumber: pnrNumber,
+            mobileNumber: mobileNumber,
+            paymentScreenshotInfo: screenshotFileName,
+            // Supabase automatically adds 'created_at' timestamp
+            user_id: userId, // Store the generated userId
+          },
+        ]);
 
-      await addDoc(pnrPredictionsCollectionRef, {
-        pnrNumber: pnrNumber,
-        mobileNumber: mobileNumber,
-        paymentScreenshotInfo: screenshotFileName,
-        timestamp: serverTimestamp(),
-        userId: userId,
-      });
+      if (error) {
+        throw error;
+      }
 
       setMessage('Your PNR prediction request has been submitted successfully! We will get back to you shortly.');
       // Clear form fields after successful submission
@@ -283,7 +306,7 @@ function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
       }
 
     } catch (error) {
-      console.error("Error submitting PNR prediction request:", error);
+      console.error("Error submitting PNR prediction request:", error.message);
       setMessage(`Failed to submit PNR prediction request: ${error.message}`);
     }
   };
@@ -373,7 +396,7 @@ function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
           className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md font-semibold text-lg
             hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
             transition duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-          disabled={!isAuthReady}
+          disabled={!isReady}
         >
           Submit PNR Prediction Request
         </button>
@@ -397,67 +420,19 @@ function PNRPredictionForm({ db, userId, isAuthReady, setMessage }) {
 }
 
 function App() {
-  // Firebase state variables
-  const [db, setDb] = useState(null);
-  const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isReady, setIsReady] = useState(false); // Renamed from isAuthReady for general readiness
   const [message, setMessage] = useState(''); // For global user feedback
   const [currentPage, setCurrentPage] = useState('booking'); // 'booking' or 'pnrPrediction'
 
-  // Initialize Firebase and handle authentication
+  // Initialize Supabase and generate a unique user ID
   useEffect(() => {
-    try {
-      // Access global Firebase config and app ID
-      const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-      if (!firebaseConfig) {
-        console.error("Firebase config not found. Please ensure __firebase_config is set.");
-        setMessage("Error: Firebase configuration missing.");
-        return;
-      }
-
-      // Initialize Firebase app
-      const app = initializeApp(firebaseConfig);
-      const firestoreDb = getFirestore(app);
-      const firebaseAuth = getAuth(app);
-
-      setDb(firestoreDb);
-      setAuth(firebaseAuth);
-
-      // Listen for auth state changes
-      const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
-        if (user) {
-          // User is signed in.
-          setUserId(user.uid);
-        } else {
-          // User is signed out, try to sign in anonymously or with custom token
-          try {
-            if (initialAuthToken) {
-              await signInWithCustomToken(firebaseAuth, initialAuthToken);
-              setUserId(firebaseAuth.currentUser?.uid);
-            } else {
-              // If no custom token, sign in anonymously
-              await signInAnonymously(firebaseAuth);
-              setUserId(firebaseAuth.currentUser?.uid);
-            }
-          } catch (error) {
-            console.error("Firebase authentication error:", error);
-            setMessage(`Authentication error: ${error.message}`);
-          }
-        }
-        setIsAuthReady(true); // Auth state determined
-      });
-
-      // Cleanup subscription on unmount
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Failed to initialize Firebase:", error);
-      setMessage(`Failed to initialize Firebase: ${error.message}`);
+    // Generate a new unique user ID if not already set (e.g., on first load)
+    if (!userId) {
+      setUserId(crypto.randomUUID());
     }
-  }, []); // Run only once on component mount
+    setIsReady(true); // Supabase client is initialized globally, so app is ready
+  }, [userId]); // Dependency on userId to only run if userId is null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
@@ -484,11 +459,11 @@ function App() {
         </div>
       )}
 
-      {isAuthReady ? (
+      {isReady ? (
         currentPage === 'booking' ? (
-          <BookingForm db={db} userId={userId} isAuthReady={isAuthReady} setMessage={setMessage} />
+          <BookingForm userId={userId} isReady={isReady} setMessage={setMessage} />
         ) : (
-          <PNRPredictionForm db={db} userId={userId} isAuthReady={isAuthReady} setMessage={setMessage} />
+          <PNRPredictionForm userId={userId} isReady={isReady} setMessage={setMessage} />
         )
       ) : (
         <p className="text-center text-gray-500 text-sm">Initializing application, please wait...</p>
