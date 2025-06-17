@@ -228,12 +228,13 @@ function BookingForm({ userId, isReady, setMessage }) {
         <div className="mt-6 pt-4 border-t border-gray-200">
           <h2 className="text-xl font-semibold text-indigo-700 mb-3">Payment Details</h2>
           <p className="text-gray-600 text-sm mb-4">
-            Please make a payment of <span className="font-bold text-green-600">₹[Small Charge Amount]</span> to the QR code or UPI details below.
+            Please make a payment of <span className="font-bold text-green-600">₹251</span> to the QR code or UPI details below.
           </p>
           <div className="flex flex-col items-center justify-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
             <img src={qrCodeUrl} alt="Payment QR Code" className="w-48 h-48 rounded-lg shadow-md border border-gray-300 object-cover mb-3" />
             <p className="text-sm font-medium text-gray-800">UPI ID: <span className="font-semibold text-indigo-700 select-all">{upiId}</span></p>
             <p className="text-sm font-medium text-gray-800">UPI Number: <span className="font-semibold text-indigo-700 select-all">{upiNumber}</span></p>
+            <p className="text-sm text-gray-500 mt-2">Scan this QR code to pay with any UPI app</p>
           </div>
 
           <label htmlFor="paymentScreenshot" className="block text-sm font-medium text-gray-700 mb-1">
@@ -260,7 +261,7 @@ function BookingForm({ userId, isReady, setMessage }) {
           type="submit"
           className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-md font-semibold text-lg
             hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-            transition duration-200 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            transition duration-200 ease-in-out shadow-lg transform hover:-translate-y-1"
           disabled={!isReady || uploading} // Disable button while not ready or uploading
         >
           {uploading ? 'Submitting...' : 'Submit Booking Request'}
@@ -441,12 +442,13 @@ function PNRPredictionForm({ userId, isReady, setMessage }) {
         <div className="mt-6 pt-4 border-t border-gray-200">
           <h2 className="text-xl font-semibold text-indigo-700 mb-3">Service Fee Payment</h2>
           <p className="text-gray-600 text-sm mb-4">
-            A small service fee of <span className="font-bold text-green-600">₹[Service Fee Amount]</span> applies for this prediction service.
+            A small service fee of <span className="font-bold text-green-600">₹101</span> applies for this prediction service.
           </p>
           <div className="flex flex-col items-center justify-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
             <img src={qrCodeUrl} alt="Payment QR Code" className="w-48 h-48 rounded-lg shadow-md border border-gray-300 object-cover mb-3" />
             <p className="text-sm font-medium text-gray-800">UPI ID: <span className="font-semibold text-indigo-700 select-all">{upiId}</span></p>
             <p className="text-sm font-medium text-gray-800">UPI Number: <span className="font-semibold text-indigo-700 select-all">{upiNumber}</span></p>
+            <p className="text-sm text-gray-500 mt-2">Scan this QR code to pay with any UPI app</p>
           </div>
 
           <label htmlFor="paymentScreenshot" className="block text-sm font-medium text-gray-700 mb-1">
