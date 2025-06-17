@@ -1,16 +1,13 @@
-/* global __app_id, __firebase_config, __initial_auth_token */ // These are no longer used but kept as a comment for context
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js'; // Import Supabase client
 
 // --- SUPABASE CONFIGURATION ---
 // IMPORTANT: These are your actual Supabase project URL and Public Anon Key.
-// They have been updated based on your last input.
-const SUPABASE_URL = 'https://gsvwaketebaysumqbwmx.supabase.co'; // Example: 'https://abcdefg.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzdndha2V0ZWJheXN1bXFid214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNTY5NTAsImV4cCI6MjA2NTczMjk1MH0.31aG_BNCcE8vn_nwZ_XXNohsF_CuXXMYNWsTvVNWAAY'; // Example: 'eyJhbGciOiJIUzI1NiI...[your public anon key]'
+const SUPABASE_URL = 'https://gsvwaketebaysumqbwmx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzdndha2V0ZWJheXN1bXFid214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNTY5NTAsImV4cCI6MjA2NTczMjk1MH0.31aG_BNCcE8vn_nwZ_XXNohsF_CuXXMYNWsTvVNWAAY';
 // --- END SUPABASE CONFIGURATION ---
 
 // Initialize Supabase client
-// This client will be used to interact with your Supabase database.
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Define BookingForm component
@@ -65,7 +62,7 @@ function BookingForm({ userId, isReady, setMessage }) {
 
         // Upload the file to Supabase Storage
         // Ensure your 'payment-screenshots' bucket exists and has appropriate RLS policies (INSERT for 'anon')
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage // Removed uploadData
           .from('payment-screenshots')
           .upload(filePath, paymentScreenshot, {
             cacheControl: '3600', // Cache for 1 hour for better performance
@@ -80,7 +77,6 @@ function BookingForm({ userId, isReady, setMessage }) {
         }
 
         // Get the public URL of the uploaded file
-        // This URL is what you'll store in your database
         const { data: publicUrlData } = supabase.storage
           .from('payment-screenshots')
           .getPublicUrl(filePath);
@@ -89,7 +85,7 @@ function BookingForm({ userId, isReady, setMessage }) {
       }
 
       // Insert booking data into the 'trainBookings' table
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase // Removed data
         .from('trainBookings') // Ensure this table exists in Supabase
         .insert([
           {
@@ -331,8 +327,7 @@ function PNRPredictionForm({ userId, isReady, setMessage }) {
         const filePath = `pnr-screenshots/${fileName}`; // Folder inside your 'payment-screenshots' bucket
 
         // Upload the file to Supabase Storage
-        // Ensure your 'payment-screenshots' bucket exists and has appropriate RLS policies (INSERT for 'anon')
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage // Removed uploadData
           .from('payment-screenshots') // Ensure this bucket exists in Supabase
           .upload(filePath, paymentScreenshot, {
             cacheControl: '3600', // Cache for 1 hour
@@ -355,7 +350,7 @@ function PNRPredictionForm({ userId, isReady, setMessage }) {
       }
 
       // Insert PNR prediction data into the 'pnrPredictions' table
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase // Removed data
         .from('pnrPredictions') // Ensure this table exists in Supabase
         .insert([
           {
@@ -475,7 +470,7 @@ function PNRPredictionForm({ userId, isReady, setMessage }) {
           type="submit"
           className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-md font-semibold text-lg
             hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-            transition duration-200 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            transition duration-200 ease-in-out shadow-lg transform hover:-translate-y-1"
           disabled={!isReady || uploading} // Disable button while not ready or uploading
         >
           {uploading ? 'Submitting...' : 'Submit PNR Prediction Request'}
